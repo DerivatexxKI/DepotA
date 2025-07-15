@@ -6,12 +6,23 @@ from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
 from io import BytesIO
 
 st.set_page_config(page_title="Treasury Report Generator", page_icon="📄")
-st.title("📄 Treasury KI-Assistent – Täglicher Depot A Report")
 
-uploaded_file = st.file_uploader("📄 Bitte lade deine Depot A Datei im Excel-Format hoch", type=["xlsx", "xls"])
+# Begrüßung und Intro
+st.title("📊 Treasury KI-Assistent – Täglicher Depot A Report")
+st.markdown("""
+Willkommen im Treasury-Analyse-Tool. Diese App unterstützt dich bei der tagesaktuellen Analyse deines Depot A – inkl.:
+- DV01-Berechnung
+- Duration
+- Spread- und Liquiditätsrisiken
+- Emittentenanalyse
+- Automatischer Word-Export für Vorstand & ALM
+""")
+
+st.info("⬆️ Bitte lade eine Excel-Datei im Depot A Format hoch (z. B. BondsKIshort.xlsx), um die Analyse zu starten.")
+
+uploaded_file = st.file_uploader("📤 Excel-Datei auswählen", type=["xlsx", "xls"])
 
 if not uploaded_file:
-    st.warning("⬆️ Bitte lade eine Excel-Datei hoch, um fortzufahren.")
     st.stop()
 
 # Datenverarbeitung
@@ -91,7 +102,7 @@ word_io.seek(0)
 
 st.success("✅ Analyse abgeschlossen – bereit zum Download.")
 st.download_button(
-    label="📅 Word-Report herunterladen",
+    label="📥 Word-Report herunterladen",
     data=word_io,
     file_name="Treasury_Report_DepotA.docx",
     mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
