@@ -22,25 +22,34 @@ st.info("⬆️ Bitte lade eine Excel-Datei im Depot A Format hoch (z. B. Bond
 
 uploaded_file = st.file_uploader("📤 Excel-Datei auswählen", type=["xlsx", "xls"])
 
-# Lade Demo-Datei, falls kein Upload erfolgt ist
-if uploaded_file:
-    source = uploaded_file
-    st.success("✅ Datei erfolgreich hochgeladen.")
-else:
-    st.warning("⚠️ Keine Datei hochgeladen – es werden Beispieldaten geladen.")
-    source = "BondsKIshort.xlsx"
+# Dummy-Datenstruktur als Fallback
+dummy_data = {
+    "Bond": ["DE000A0", "DE000B1"],
+    "DV01": [1000, 1200],
+    "Modified Duration": [3.5, 4.2],
+    "Latest Yield": [2.1, 1.9],
+    "3M Carry (bps)": [15, 18],
+    "PP Swap Spread": [-12, 5],
+    "PP Govt Spread": [22, 30],
+    "Size in Billions": [0.9, 1.5],
+}
 
 try:
     with st.spinner("🔄 Analyse läuft – bitte warten..."):
-        df_raw = pd.read_excel(source, sheet_name=0, header=None)
-        df_data = df_raw[1:].copy()
-        df_data.columns = df_raw.iloc[0]
-        df_data.reset_index(drop=True, inplace=True)
+        if uploaded_file:
+            df_raw = pd.read_excel(uploaded_file, sheet_name=0, header=None)
+            df_data = df_raw[1:].copy()
+            df_data.columns = df_raw.iloc[0]
+            df_data.reset_index(drop=True, inplace=True)
+        else:
+            st.warning("⚠️ Keine Datei hochgeladen – es werden Beispieldaten geladen.")
+            df_data = pd.DataFrame(dummy_data)
 
         for col in ["DV01", "Modified Duration", "Latest Yield", "3M Carry (bps)", "PP Swap Spread", "PP Govt Spread", "Size in Billions"]:
             df_data[col] = pd.to_numeric(df_data[col], errors="coerce")
 
-        df_data["Emittent"] = df_data["Bond"].astype(str).str.extract(r'([A-Z]{2,})')
+        if "Emittent" not in df_data.columns:
+            df_data["Emittent"] = df_data["Bond"].astype(str).str.extract(r'([A-Z]{2,})')
 
         dv01_total = df_data["DV01"].sum()
         duration_avg = df_data["Modified Duration"].mean()
@@ -58,7 +67,7 @@ try:
         doc.add_heading("Täglicher Treasury-Report – Analyse des Depot A", level=1)
         doc.add_paragraph("Datum: 15. Juli 2025")
         doc.add_paragraph("Berichtszeitraum: Tägliche Positionsbewertung")
-        doc.add_paragraph("Quelle: Hochgeladene Datei" if uploaded_file else "Quelle: Beispieldatei")
+        doc.add_paragraph("Quelle: Hochgeladene Datei" if uploaded_file else "Quelle: Beispieldaten")
 
         doc.add_heading("1. Gesamtüberblick – Portfolioausrichtung & Zinsrisiken", level=2)
         doc.add_paragraph(
